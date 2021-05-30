@@ -41,6 +41,40 @@ with open(sys.argv[1], 'rb') as fh:
   data=fh.read()
   print("file read")
 
+
+# tests with hashlib module
+  print("testing hashlib {0} bit functions".format(checksumlength))
+  import hashlib
+  for clsname in hashlib.algorithms_available:
+
+    #print( clsname)
+    cls = hashlib.new(clsname)
+    if checksumlength == None or checksumlength == cls.digest_size*8 or cls.digest_size == 0:
+      #try:
+
+        cls.update(data)
+        if clsname=="shake_128":
+            if checksumlength== None:
+                res=cls.hexdigest(128)
+            else:
+                res=cls.hexdigest(int(checksumlength/8))
+        elif clsname=="shake_256":
+            if checksumlength== None:
+                res=cls.hexdigest(256)
+            else:
+                res=cls.hexdigest(int(checksumlength/8))
+        else:
+            res=cls.hexdigest()
+
+        if res in sumresults:
+          sumresults[res].append(clsname)
+        else:
+          sumresults[res]=[clsname]
+        print("crc: {0}  = {1} ({2} bit width)".format(clsname,res,cls.digest_size*8) )
+      #except:
+        pass
+
+
 #tests with binascii
   if checksumlength == 32 or checksumlength == None:
     print("testing crc32 from binasci (same as zlib)")
@@ -91,7 +125,6 @@ with open(sys.argv[1], 'rb') as fh:
         print("crc: {0}  = {1} ({2} bit width)".format(clsname,res,cls._width) )
       except:
         pass
-
 
 
 #print(sumresults)
