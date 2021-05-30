@@ -24,7 +24,20 @@ from mmap import ACCESS_READ, mmap
 import crccheck,sys,re
 
 if len(sys.argv) < 3 or len(sys.argv) > 4:
-  print ("need file, checksum and optional checksum bit length as arguments")
+  print ("Error, missing file, checksum and optional checksum bit length as arguments")
+  print ("Usage: identifychecksum.py <filename> <known checksum> <checksum bit length>")
+
+  import hashlib
+  print ("available algorithms from hashlib: ")
+  for clsname in hashlib.algorithms_available:
+    print("   ", clsname)
+  import crccheck
+  print ("available algorithms from crccheck.crc: ")
+  for cls in crccheck.crc.ALLCRCCLASSES:
+    print("   ",  cls.__name__)
+  print ("available algorithms from crccheck.checksum: ")
+  for cls in crccheck.checksum.ALLCHECKSUMCLASSES:
+    print("   ",  cls.__name__)
   sys.exit(-1)
 
 checksumtoidentify = sys.argv[2]
