@@ -6,7 +6,9 @@
 #
 # Description:
 #   The Script computes sums of by known checksum algorithms and tries
-#   to guess what algorithm was used.
+#   to guess what algorithm was used. It is possible to pass the length
+#   of the check sum as 3rd parameter
+#   It is also possible to detect, if the given checksum is a part of a larger checksum
 #
 # Dependencies:
 #   python3
@@ -21,12 +23,11 @@
 from mmap import ACCESS_READ, mmap
 import crccheck,sys,re
 
-print(len(sys.argv))
 if len(sys.argv) < 3 or len(sys.argv) > 4:
   print ("need file, checksum and optional checksum bit length as arguments")
   sys.exit(-1)
 
-checksumtoidentify= int(sys.argv[2],16)
+checksumtoidentify = sys.argv[2]
 
 if len(sys.argv) ==4:
     checksumlength= int(sys.argv[3])
@@ -45,12 +46,13 @@ with open(sys.argv[1], 'rb') as fh:
     print("testing crc32 from binasci (same as zlib)")
     import binascii
     res = binascii.crc32(data) & 0xFFFFFFFF
+    res = "{0:x}".format(res)
     clsname = "crc32"
     if res in sumresults:
         sumresults[res].extend(clsname)
     else:
         sumresults[res]=[clsname]
-    print("crc: {0}  = {1:x} ({2} bit width)".format(clsname,res,32) )
+    print("crc: {0}  = {1} ({2} bit width)".format(clsname,res,32) )
 
 
 # tests with crc module - has an identify but it does basically the same stuff we do
@@ -62,11 +64,12 @@ with open(sys.argv[1], 'rb') as fh:
     if checksumlength == None or cls._width == checksumlength:
       try:
         res = cls.calc(data)
+        res = "{0:x}".format(res)
         if res in sumresults:
-          sumresults[res].extend(clsname)
+          sumresults[res].append(clsname)
         else:
           sumresults[res]=[clsname]
-        print("crc: {0}  = {1:x} ({2} bit width)".format(clsname,res,cls._width) )
+        print("crc: {0}  = {1} ({2} bit width)".format(clsname,res,cls._width) )
       except:
         pass
 
@@ -80,11 +83,12 @@ with open(sys.argv[1], 'rb') as fh:
     if checksumlength == None or cls._width == checksumlength:
       try:
         res = cls.calc(data)
+        res = "{0:x}".format(res)
         if res in sumresults:
-          sumresults[res].extend(clsname)
+          sumresults[res].append(clsname)
         else:
           sumresults[res]=[clsname]
-        print("crc: {0}  = {1:x} ({2} bit width)".format(clsname,res,cls._width) )
+        print("crc: {0}  = {1} ({2} bit width)".format(clsname,res,cls._width) )
       except:
         pass
 
@@ -94,7 +98,10 @@ with open(sys.argv[1], 'rb') as fh:
 
 #print(sumresults[checksumtoidentify])
 try:
-  print("{0:x} is a {1}".format(checksumtoidentify,sumresults[checksumtoidentify]))
+  print("{0} exactly matches a {1}".format(checksumtoidentify,sumresults[checksumtoidentify]))
 except: 
-  print("checksum {0:x} not identified".format(checksumtoidentify))
+  print("checksum {0} not exactly identified".format(checksumtoidentify))
+  for res in sumresults:
+    if re.search(checksumtoidentify,res):
+      print("checksum {0} partially matches {1} which is a {2}".format(checksumtoidentify,res,sumresults[res]))
 
